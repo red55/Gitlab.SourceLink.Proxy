@@ -48,7 +48,7 @@ Yarp:
     gitlab:
       Destinations:
         destination1:
-          Address: https://gitlab.apps.yunqi.studio
+          Address: https://gitlab.com
 
 AppConfig:
-  GitlabBaseUrl: https://gitlab.apps.yunqi.studio
+  GitlabBaseUrl: https://gitlab.com

@@ -1,3 +1,6 @@
 Serilog:
   MinimumLevel: 
     Default: "Debug"
+
+AppConfig:
+  GitlabBaseUrl: https://gitlab.apps.yunqi.studio

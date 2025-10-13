@@ -1,0 +1,9 @@
+Yarp:
+  Clusters:
+    gitlab:
+      Destinations:
+        destination1:
+          Address: https://gitlab
+
+AppConfig:
+  GitlabBaseUrl: https://gitlab
