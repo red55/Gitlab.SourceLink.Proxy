@@ -1,0 +1,141 @@
+services:
+  gitlab.sourcelink.proxy:
+    image: ${DOCKER_REGISTRY-}gitlabsourcelinkproxy
+    build:
+      context: .
+      dockerfile: Gitlab.SourceLink.Proxy/Dockerfile
+    extra_hosts:
+      gitlab.apps.yunqi.studio: "176.108.241.93"
+    labels:
+      traefik.enable: true
+      traefik.http.routers.sourcelink.entrypoints: https
+      traefik.http.routers.sourcelink.rule: "Host(`gitlab.apps.yunqi.studio`) && (PathRegexp(`^/.+/-/raw/`) || PathRegexp(`^/api/v4/projects/.+/repository/files/`))"
+      traefik.http.routers.sourcelink.tls: true
+      traefik.http.routers.sourcelink.service: sourcelink
+      traefik.http.services.sourcelink.loadbalancer.server.scheme: http
+      traefik.http.services.sourcelink.loadbalancer.server.port: 8080
+
+      traefik.http.routers.gitlab_star.entrypoints: https
+      traefik.http.routers.gitlab_star.rule: "Host(`gitlab.apps.yunqi.studio`)"
+      traefik.http.routers.gitlab_star.tls: true
+      traefik.http.routers.gitlab_star.service: gitlab_star
+      traefik.http.services.gitlab_star.loadbalancer.server.url: https://gitlab.apps.yunqi.studio
+      com.centurylinklabs.watchtower.enable: false
+
+  traefik:
+    container_name: traefik
+    image: docker.io/traefik:v3
+    extra_hosts:
+      gitlab.apps.yunqi.studio: "176.108.241.93"
+    command:
+      - --entryPoints.http.address=:80
+      - --entryPoints.https.address=:443
+      - --entrypoints.https.http.tls=true
+      #- --entrypoints.http.http.redirections.entrypoint.to=https
+      #- --entrypoints.http.http.redirections.entrypoint.scheme=https
+      # - --entrypoints.http.http.redirections.entrypoint.permanent=true
+      - --log=true
+      #- --log.filePath=/logs/traefik.log
+      - --log.level=DEBUG # (Default: error) DEBUG, INFO, WARN, ERROR, FATAL, PANIC
+      - --accessLog=true
+      #- --accessLog.filePath=/logs/access.log
+      #- --accessLog.bufferingSize=100 # Configuring a buffer of 100 lines
+      #- --accessLog.filters.statusCodes=204-299,400-499,500-599
+      - --providers.docker=true
+      - --providers.docker.exposedByDefault=false
+      - --api=true
+      - --api.insecure=true
+      - --api.dashboard=true
+      - --ping=true
+      - --providers.file.directory=/configs
+      #- --entrypoints.https.http.tls.certresolver=le_prod
+      #- --certificatesresolvers.le_prod.acme.email=lkorokh@gmail.com
+      #- --certificatesresolvers.le_prod.acme.storage=/acme/acme.json
+      #- --certificatesresolvers.le_prod.acme.httpchallenge=true
+      #- --certificatesresolvers.le_prod.acme.httpchallenge.entrypoint=http
+      #- --certificatesresolvers.le_prod.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
+      - --serversTransport.insecureSkipVerify=true
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 5s
+      retries: 60
+    ports:
+      - 80:80
+      - 443:443
+      - 8080:8080    
+    configs:
+      - source: traefik-config
+        target: /configs/traefik.yml
+      - source : traefik-crt
+        target: /configs/self-signed.crt
+      - source : traefik-key
+        target: /configs/self-signed.key
+    volumes:
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+
+configs:
+  traefik-crt:
+    content: |
+      -----BEGIN CERTIFICATE-----
+      MIIDcDCCAligAwIBAgIUUyGExA62Sxu6riDSpJUQg13spMwwDQYJKoZIhvcNAQEL
+      BQAwJTEjMCEGA1UEAwwaKi5naXRsYWIuYXBwcy55dW5xaS5zdHVkaW8wIBcNMjUx
+      MDEzMDkxNzE0WhgPMjEyNTA5MTkwOTE3MTRaMCUxIzAhBgNVBAMMGiouZ2l0bGFi
+      LmFwcHMueXVucWkuc3R1ZGlvMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKC
+      AQEAvh5p572mez7JYyOIN6xygyJOSX6ILU41F/8O3lA6hM7ZxbCZY34JlxZ2S5Q/
+      FOK5/8bN4RATckEqIJpkUQ9BrWYOf7FZi7eDwez+c+NbLbhYg9Itll5/LGMp/iF6
+      g/p46YxfuZ6Gp4+tWYfXrEY1zfK3kHasdRA+fbahDXMUa4j4xH0LfYKiAenx+KfG
+      9Kq+8BFCHOBZTA509lUTkco/RPCzEx5wogx14N0VxP7UGshfd4nEKl9T6wEXFLct
+      H9NiqPEmvvTY/jHl8PPJs8LYoOdySVqTHOTRGpEVlpKyiZUGB+Yi7zGxTkskPopp
+      KNRQgwxkhziqLsZLdsKpm4AM1wIDAQABo4GVMIGSMB0GA1UdDgQWBBTzRd4NAx/H
+      GL9OpUI1hiRIQZwcuTAfBgNVHSMEGDAWgBTzRd4NAx/HGL9OpUI1hiRIQZwcuTAP
+      BgNVHRMBAf8EBTADAQH/MD8GA1UdEQQ4MDaCGGdpdGxhYi5hcHBzLnl1bnFpLnN0
+      dWRpb4IaKi5naXRsYWIuYXBwcy55dW5xaS5zdHVkaW8wDQYJKoZIhvcNAQELBQAD
+      ggEBABMkSrHb9Uf4F+1Rf0r0pzGPODbjjzx/QHzPW84/QyV/5t3EcoCRgT9cDbqp
+      iUF/hsLJOJdgg7x/n3wIQcRpgJd9ZkOAWdlZ0rJsiTQZBgmAqIIHYEUAzO1OhGd5
+      DFg89xpeCFuedXQJzf+K+vtFRcADSE7JnSvDDjBHmPSAnLLegUFeRh1Q61rPV+Vx
+      eFxZzcK5VG+hUnqLN8f7k+J50TvQNiExFgLC2mZKkd2LXV+S6B/H5kzb+E4I83gY
+      XxKmg8bNi+cXyamoaH2rNniN0jHD0xblpWvhpjUjf8x3oClI9vCWAY8nzzsowzfW
+      4a7sO/cmnccbl5OzQ4eL9qHCFPg=
+      -----END CERTIFICATE-----
+
+  traefik-key:
+    content: |
+      -----BEGIN PRIVATE KEY-----
+      MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQC+HmnnvaZ7Pslj
+      I4g3rHKDIk5JfogtTjUX/w7eUDqEztnFsJljfgmXFnZLlD8U4rn/xs3hEBNyQSog
+      mmRRD0GtZg5/sVmLt4PB7P5z41stuFiD0i2WXn8sYyn+IXqD+njpjF+5noanj61Z
+      h9esRjXN8reQdqx1ED59tqENcxRriPjEfQt9gqIB6fH4p8b0qr7wEUIc4FlMDnT2
+      VRORyj9E8LMTHnCiDHXg3RXE/tQayF93icQqX1PrARcUty0f02Ko8Sa+9Nj+MeXw
+      88mzwtig53JJWpMc5NEakRWWkrKJlQYH5iLvMbFOSyQ+imko1FCDDGSHOKouxkt2
+      wqmbgAzXAgMBAAECggEAAavNUmWIvyQGwQcNUPeEWtO5pXAQrOsMrTNgPD92ZRs6
+      zAb+FNT28kgzUW8VpxW7xAb0KKcA6TMFGg206s4msSMakWkaDcjW4rL9T5WS2Yrd
+      G96gzIJJWf4Hl72lQop/dwaDkY4PN/FGavdSw7W5Ksr7pqHP9wgesA3cgxjrPvma
+      0eBVVafMhMtGDwoPrDD+iX+JpmN8ZHXZ6PAZ5DmKLz/D/CTApU+kJwVog/LHYUgZ
+      YNGe16DfYD4KbbR+mT2Fs2FFstmRRSqZDJD5VzFczYTcNkjULE8t99wIzzShPH5c
+      icMHaskQio5jDy4NbZfQp3N1YRTDcLmVKg8N242uIQKBgQD//Cd5x9565BWuTdOn
+      13x2xVBR94FuJO0o+9zGRxLop6O3em8R289Fm8YcP28nU8oUF8d1bI4nC62y0ccy
+      ZGw1pXPFIx8H51+Cw+6ETEVtCiLLSVAwtqN5T3l3cpGIk0/EHbAveQ6uInjp9pj2
+      ICuq7xpZk2Kf+BP3c1pIWprvYQKBgQC+IUUbTmHJFZOYYlzN5gA1oQFcHnJlj1t/
+      Okk4x1PIhkNsRJZt4WSPGidA0Cn7tK7ydMUZkwJ6K/9S5Qexq/fUf2pvQcAWI5hl
+      X9H77gdVt8EX3P0e3POF/mUQ6WuAHv0T1v9iBvIbQ2gJ1hPLCOV4J8hLi8IOlrn7
+      StWqbuX/NwKBgFImceS7J8L4f5y4jTxIA0F6gRRNAdR/NTz51xgqpv7TDc9ME2j/
+      ybzlCOb31Iwib6+TEge1FsmhDdVdTTf20mNE/ao+Yy7+KcClcF40u/MKVbA3juyT
+      MFM2Fh0nP109KVQe0vPpPbTUi0lKQjx6hokMwsAMdJIx4vZ+pnKh4ScBAoGAczby
+      C8QJ2bLrh/JDTrpL8jOpAUuqAwVGaujFKlUP3noOLXO6vMdTCqzMkKgUaOVrBp3g
+      OsktPR+gT3lemjodqnWz58uuPTxAw123f7UUWMtLhcxyztsR72bjk8X/UNp2filR
+      BPQ0jnTgfOVvhR/U/mUNKUp9xB1ugmss42Tkly0CgYAsx35bPnqQMMA0unHe3bee
+      yuzsz1pqYWIFNdIC6/06/N8i4FR3+m81OYbLEs830Xn3ISmNN78Dxu35fIm0Lm2O
+      CbGlBWss8LrfDSAatBWCmV1R/0WL7QiUjpkvk0LwMZTmtwuC+StJL6bEdAH5mIIJ
+      dawrn9UfsS2qdsWIIhrTdg==
+      -----END PRIVATE KEY-----
+
+  traefik-config:
+    content: |
+      tls:
+        stores:
+          default:
+            defaultCertificate: 
+              certFile: /configs/self-signed.crt
+              keyFile: /configs/self-signed.key

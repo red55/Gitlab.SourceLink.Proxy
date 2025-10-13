@@ -1,0 +1,9 @@
+root = true
+
+[*]
+guidelines = 120
+indent_style = space
+
+[*.{yml,yaml,csproj,slnx,xml,json}]
+ident_type = space
+ident_size = 2

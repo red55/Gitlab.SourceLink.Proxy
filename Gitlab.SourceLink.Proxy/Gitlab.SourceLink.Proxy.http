@@ -1,0 +1,6 @@
+@Gitlab.SourceLink.Proxy_HostAddress = http://localhost:5285
+
+GET {{Gitlab.SourceLink.Proxy_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
