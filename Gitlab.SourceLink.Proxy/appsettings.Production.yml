@@ -1,6 +1,8 @@
 Yarp:
   Clusters:
     gitlab:
+      HttpClient:
+        DangerousAcceptAnyServerCertificate: true    
       Destinations:
         destination1:
           Address: https://gitlab
