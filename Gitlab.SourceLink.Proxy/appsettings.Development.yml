@@ -1,6 +1,11 @@
 Serilog:
   MinimumLevel: 
     Default: "Debug"
-
+Yarp:
+  Clusters:
+    gitlab:
+      Destinations:
+        destination1:
+          Address: https://gitlab.apps.yunqi.studio
 AppConfig:
   GitlabBaseUrl: https://gitlab.apps.yunqi.studio

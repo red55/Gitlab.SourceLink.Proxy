@@ -135,6 +135,9 @@ namespace Gitlab.SourceLink.Proxy.Transforms
                     Logger.LogDebug ("Rewriting raw file URL to: {NewPath}", newPath);
                     request.Path = newPath;
 
+                    context.ProxyRequest.RequestUri =
+                      MakeDestinationAddress (context.DestinationPrefix, request.Path, request.QueryString);
+
                     ReplaceAuthHeader (context);
                 }
                 else
