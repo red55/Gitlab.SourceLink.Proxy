@@ -55,15 +55,20 @@ using Serilog.Templates;
 *Connection #0 to host gitlab.apps.yunqi.studio left intact
 { "message":"404 Project Not Found"}% 
 */
-const string DEFAULT_LOG_TEMPLATE = "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] ({CorrelationId}) {Message:lj}{NewLine}{Exception}";
+const string DEFAULT_LOG_TEMPLATE = @"[{@t:yyyy-MM-ddTHH:mm:ss} {Coalesce(CorrelationId, '0000000000000:00000000')} {@l:u3}] {@m}\n{@x}";
 
 Log.Logger = new LoggerConfiguration ()
-    .WriteTo.Console (new ExpressionTemplate (DEFAULT_LOG_TEMPLATE))
+    .WriteTo.Console (new ExpressionTemplate(DEFAULT_LOG_TEMPLATE))
     .Enrich.FromLogContext ()
     .Enrich.WithCorrelationId ()
     .Enrich.WithExceptionDetails ()
     .MinimumLevel.Information ()
     .CreateBootstrapLogger ();
+
+var assembly = Assembly.GetExecutingAssembly ();
+var version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute> ()?.InformationalVersion;
+
+Log.Logger.Information ("Starting up {Application} {Version}", assembly.GetName().Name, version);
 
 var builder = WebApplication.CreateBuilder (args);
 

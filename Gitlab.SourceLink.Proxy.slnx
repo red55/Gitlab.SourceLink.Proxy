@@ -1,0 +1,27 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Folder Name="/.github/" />
+  <Folder Name="/.github/workflows/">
+    <File Path=".github/workflows/ci-on-push-master.yml" />
+    <File Path=".github/workflows/ci-on-tags-master.yml" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".dockerignore" />
+    <File Path=".editorconfig" />
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="docker-compose.dcproj">
+    <Platform Project="AnyCPU" />
+    <Build />
+  </Project>
+  <Project Path="Gitlab.SourceLink.Proxy/Gitlab.SourceLink.Proxy.csproj">
+    <Platform Project="x64" />
+  </Project>
+</Solution>

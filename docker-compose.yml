@@ -6,6 +6,8 @@ services:
       dockerfile: Gitlab.SourceLink.Proxy/Dockerfile
     extra_hosts:
       gitlab.apps.yunqi.studio: "176.108.241.93"
+    environment:
+      SERILOG:MINIMUMLEVEL:DEFAULT: "Debug"
     labels:
       traefik.enable: true
       traefik.http.routers.sourcelink.entrypoints: https

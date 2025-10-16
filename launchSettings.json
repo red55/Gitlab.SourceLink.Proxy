@@ -3,8 +3,10 @@
     "Docker Compose": {
       "commandName": "DockerCompose",
       "commandVersion": "1.0",
+      "composeLaunchServiceName": "gitlab.sourcelink.proxy",
       "serviceActions": {
-        "gitlab.sourcelink.proxy": "StartDebugging"
+        "gitlab.sourcelink.proxy": "StartDebugging",
+        "traefik": "StartWithoutDebugging"
       }
     }
   }

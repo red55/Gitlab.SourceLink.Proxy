@@ -1,6 +1,3 @@
-Serilog:
-  MinimumLevel: 
-    Default: "Debug"
 Yarp:
   Clusters:
     gitlab:
